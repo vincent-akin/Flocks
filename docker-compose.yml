@@ -1,0 +1,90 @@
+version: '3.9'
+
+services:
+  # A single-node replica set, not a plain standalone instance. This
+  # matters, not just for style: the API uses multi-document MongoDB
+  # transactions (see server/src/controllers/authController.js and
+  # memberController.js) to keep operations like "create org + parish +
+  # admin + role assignment" atomic, and MongoDB transactions only work
+  # on a replica set (or mongos) - a standalone `mongo:7` container
+  # rejects them outright. Every managed MongoDB (Atlas, DocumentDB, a
+  # real production replica set) is already a replica set, so this
+  # container config is what makes local/self-hosted deployment behave
+  # the same way production does.
+  mongo:
+    image: mongo:7
+    restart: unless-stopped
+    command: ['--replSet', 'rs0', '--bind_ip_all']
+    volumes:
+      - mongo_data:/data/db
+    ports:
+      - '27017:27017'
+    healthcheck:
+      test: ["CMD", "mongosh", "--quiet", "--eval", "db.adminCommand('ping').ok"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+
+  # One-shot job: initializes the replica set on first boot, then exits.
+  # Safe to re-run (rs.status() succeeding means it's already initialized).
+  mongo-init:
+    image: mongo:7
+    depends_on:
+      mongo:
+        condition: service_healthy
+    restart: 'no'
+    entrypoint:
+      - bash
+      - -c
+      - |
+        mongosh --host mongo:27017 --quiet --eval '
+          try {
+            rs.status();
+            print("Replica set already initialized.");
+          } catch (e) {
+            rs.initiate({ _id: "rs0", members: [{ _id: 0, host: "mongo:27017" }] });
+            print("Replica set initialized.");
+          }
+        '
+
+  server:
+    build:
+      context: ./server
+    restart: unless-stopped
+    depends_on:
+      mongo-init:
+        condition: service_completed_successfully
+    environment:
+      NODE_ENV: production
+      PORT: 5000
+      MONGO_URI: mongodb://mongo:27017/flocks?replicaSet=rs0
+      JWT_ACCESS_SECRET: ${JWT_ACCESS_SECRET:?set a strong random secret}
+      JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET:?set a strong random secret}
+      JWT_ACCESS_EXPIRES_IN: 15m
+      JWT_REFRESH_EXPIRES_IN: 30d
+      COOKIE_DOMAIN: ${COOKIE_DOMAIN:-localhost}
+      COOKIE_SECURE: ${COOKIE_SECURE:-false}
+      CLIENT_URL: ${CLIENT_URL:-http://localhost:3000}
+      ATTENDANCE_QR_TTL_SECONDS: 300
+      SMTP_HOST: ${SMTP_HOST:-}
+      SMTP_PORT: ${SMTP_PORT:-587}
+      SMTP_USER: ${SMTP_USER:-}
+      SMTP_PASS: ${SMTP_PASS:-}
+      SMTP_FROM: ${SMTP_FROM:-Flocks <no-reply@flocks.app>}
+    ports:
+      - '5000:5000'
+
+  client:
+    build:
+      context: ./client
+      args:
+        NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://localhost:5000/api/v1}
+    restart: unless-stopped
+    depends_on:
+      - server
+    ports:
+      - '3000:3000'
+
+volumes:
+  mongo_data:

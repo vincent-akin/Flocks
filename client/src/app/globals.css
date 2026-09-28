@@ -1,0 +1,127 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+
+  /* ---------- Light theme (default) ---------- */
+  --background: #F6F8FC;
+  --background-secondary: #EEF2F7;
+  --foreground: #0F172A;
+  --foreground-secondary: #475569;
+  --muted: #64748B;
+  --disabled: #94A3B8;
+
+  --surface: #FFFFFF;
+  --surface-secondary: #F1F5F9;
+  --surface-elevated: #FFFFFF;
+
+  --border: rgba(15, 23, 42, 0.10);
+  --border-subtle: rgba(15, 23, 42, 0.06);
+
+  --primary: #4F46E5;
+  --primary-hover: #4338CA;
+  --primary-foreground: #FFFFFF;
+  --secondary: #0EA5E9;
+
+  --success: #16A34A;
+  --warning: #D97706;
+  --danger: #DC2626;
+
+  --accent-blue: #2563EB;
+  --accent-purple: #7C3AED;
+  --accent-green: #16A34A;
+  --accent-amber: #D97706;
+  --accent-red: #DC2626;
+}
+
+.dark {
+  --background: #070B14;
+  --background-secondary: #0B1120;
+  --foreground: #F8FAFC;
+  --foreground-secondary: #CBD5E1;
+  --muted: #94A3B8;
+  --disabled: #64748B;
+
+  --surface: #101827;
+  --surface-secondary: #0B1120;
+  --surface-elevated: #151F31;
+
+  --border: rgba(255, 255, 255, 0.08);
+  --border-subtle: rgba(255, 255, 255, 0.05);
+
+  --primary: #6366F1;
+  --primary-hover: #818CF8;
+  --primary-foreground: #FFFFFF;
+  --secondary: #38BDF8;
+
+  --success: #22C55E;
+  --warning: #F59E0B;
+  --danger: #F87171;
+
+  --accent-blue: #60A5FA;
+  --accent-purple: #A78BFA;
+  --accent-green: #4ADE80;
+  --accent-amber: #FBBF24;
+  --accent-red: #F87171;
+}
+
+* {
+  border-color: var(--border);
+}
+
+html {
+  scroll-behavior: smooth;
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  background-color: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+/* Visible, consistent focus ring across the app - never rely on color alone */
+:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+::selection {
+  background: var(--primary);
+  color: var(--primary-foreground);
+}
+
+/* Slim, theme-aware scrollbar */
+::-webkit-scrollbar { width: 10px; height: 10px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb {
+  background-color: var(--border);
+  border-radius: 999px;
+  border: 2px solid var(--background);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+.text-balance { text-wrap: balance; }
+
+/* Subtle radial glow used behind hero/CTA sections */
+.bg-glow {
+  background-image: radial-gradient(700px circle at 20% 0%, rgba(99, 102, 241, 0.16), transparent 60%),
+    radial-gradient(600px circle at 90% 10%, rgba(56, 189, 248, 0.10), transparent 55%);
+}
+.dark .bg-glow {
+  background-image: radial-gradient(700px circle at 20% 0%, rgba(99, 102, 241, 0.22), transparent 60%),
+    radial-gradient(600px circle at 90% 10%, rgba(56, 189, 248, 0.12), transparent 55%);
+}
